@@ -16,6 +16,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final _imageUrlFocusNode = FocusNode();
   final _form = GlobalKey<FormState>();
   Product _product;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,11 +25,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
     super.dispose();
   }
 
-  void _saveForm() {
+  void _saveForm() async {
+    setState(() => _isLoading = true);
     bool isValid = _form.currentState.validate();
     if (!isValid) return;
     _form.currentState.save();
-    Provider.of<Products>(context, listen: false).updateProduct(_product);
+    await Provider.of<Products>(context, listen: false).updateProduct(_product);
+    setState(() => _isLoading = false);
     Navigator.of(context).pop();
   }
 
@@ -45,7 +48,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
           )
         ],
       ),
-      body: Padding(
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
         padding: EdgeInsets.all(10),
         child: Form(
           key: _form,

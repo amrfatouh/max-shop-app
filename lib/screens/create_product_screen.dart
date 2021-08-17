@@ -16,6 +16,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   final _imageUrlFocusNode = FocusNode();
   final _form = GlobalKey<FormState>();
   Product _product = Product();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,12 +25,29 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     super.dispose();
   }
 
-  void _saveForm() {
+  Future<void> _saveForm() async {
+    setState(() => _isLoading = true);
     bool isValid = _form.currentState.validate();
     if (!isValid) return;
     _form.currentState.save();
     _product.id = "Product_${DateTime.now().toIso8601String()}";
-    Provider.of<Products>(context, listen: false).addProduct(_product);
+    try {
+      await Provider.of<Products>(context, listen: false).addProduct(_product);
+    } catch (error) {
+      await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+                title: Text('An error ocurred!'),
+                content: Text('Something went wrong'),
+                actions: [
+                  TextButton(
+                    child: Text('Okay'),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                ],
+              ));
+    }
+    setState(() => _isLoading = false);
     Navigator.of(context).pop();
   }
 
@@ -45,7 +63,11 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           )
         ],
       ),
-      body: Padding(
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : Padding(
         padding: EdgeInsets.all(10),
         child: Form(
           key: _form,

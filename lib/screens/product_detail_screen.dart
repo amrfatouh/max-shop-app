@@ -50,6 +50,19 @@ class ProductDetailScreen extends StatelessWidget {
             child: Text('Add to cart'),
             onPressed: () {
               Provider.of<Cart>(context, listen: false).addCartItem(product);
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Product added to cart!'),
+                  action: SnackBarAction(
+                    label: 'UNDO',
+                    onPressed: () {
+                      Provider.of<Cart>(context, listen: false)
+                          .removeSingleItem(product.id);
+                    },
+                  ),
+                ),
+              );
             },
           )
         ],
