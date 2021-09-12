@@ -30,7 +30,23 @@ class _EditProductScreenState extends State<EditProductScreen> {
     bool isValid = _form.currentState.validate();
     if (!isValid) return;
     _form.currentState.save();
-    await Provider.of<Products>(context, listen: false).updateProduct(_product);
+    try {
+      await Provider.of<Products>(context, listen: false)
+          .updateProduct(_product);
+    } catch (error) {
+      await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+                title: Text('An error ocurred!'),
+                content: Text('Something went wrong'),
+                actions: [
+                  TextButton(
+                    child: Text('Okay'),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                ],
+              ));
+    }
     setState(() => _isLoading = false);
     Navigator.of(context).pop();
   }

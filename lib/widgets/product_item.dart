@@ -43,7 +43,7 @@ class ProductItem extends StatelessWidget {
               Expanded(
                 child: Text(
                   product.title,
-                  overflow: TextOverflow.fade,
+                  overflow: TextOverflow.ellipsis,
                   softWrap: false,
                   style: TextStyle(color: Colors.white),
                 ),

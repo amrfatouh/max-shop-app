@@ -28,7 +28,10 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   Future<void> _saveForm() async {
     setState(() => _isLoading = true);
     bool isValid = _form.currentState.validate();
-    if (!isValid) return;
+    if (!isValid) {
+      setState(() => _isLoading = false);
+      return;
+    }
     _form.currentState.save();
     _product.id = "Product_${DateTime.now().toIso8601String()}";
     try {

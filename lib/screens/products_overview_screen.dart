@@ -19,14 +19,22 @@ class ProductsOverviewScreen extends StatefulWidget {
 class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
   bool _showFavouritesOnly = false;
   bool _isLoading = false;
+  bool _fetchingProductsError = false;
+  String _errorMessage = '';
 
   @override
   void initState() {
     setState(() => _isLoading = true);
     Provider.of<Products>(context, listen: false)
         .fetchAndSetProducts()
-        .then((_) => setState(() => _isLoading = false));
-
+        .then((_) => setState(() => _isLoading = false))
+        .catchError((error) {
+      setState(() {
+        _fetchingProductsError = true;
+        _errorMessage = error.toString();
+        _isLoading = false;
+      });
+    });
     super.initState();
   }
 
@@ -78,7 +86,9 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
       drawer: AppDrawer(),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : Padding(
+          : _fetchingProductsError
+              ? Center(child: Text(_errorMessage))
+              : Padding(
         padding: EdgeInsets.all(10),
         child: ProductsGrid(_showFavouritesOnly),
       ),

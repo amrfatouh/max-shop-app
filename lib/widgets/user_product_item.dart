@@ -10,7 +10,8 @@ class UserProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scaffold = ScaffoldMessenger.of(context);
+    // can't be used in catch block (i thinl it has something to do with rebuilding the widget and using the old context)
+    var scaffoldMessenger = ScaffoldMessenger.of(context);
     return Column(
       children: [
         ListTile(
@@ -43,11 +44,14 @@ class UserProductItem extends StatelessWidget {
                       await Provider.of<Products>(context, listen: false)
                         .removeProduct(product.id);
                     } catch (error) {
-                      scaffold.showSnackBar(SnackBar(
+                      scaffoldMessenger.showSnackBar(
+                        SnackBar(
                           content: Text(
-                        error.toString(),
-                        textAlign: TextAlign.center,
-                      )));
+                            error.toString(),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
                     }
                   },
                   icon: Icon(
