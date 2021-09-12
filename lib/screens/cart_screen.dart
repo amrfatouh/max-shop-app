@@ -9,6 +9,29 @@ class CartScreen extends StatelessWidget {
   static String routeName = '/cart';
   const CartScreen({Key key}) : super(key: key);
 
+  Future<void> addOrder(screenContext) async {
+    try {
+      final Cart cart = Provider.of<Cart>(screenContext, listen: false);
+      await Provider.of<Orders>(screenContext, listen: false).addOrder(cart);
+      cart.clear();
+    } catch (error) {
+      await showDialog(
+        context: screenContext,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          content: Text(error.toString()),
+          actions: [
+            TextButton(
+              child: Text('ok'),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          ],
+        ),
+      );
+      Navigator.of(screenContext).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final Cart cart = Provider.of<Cart>(context);
@@ -27,11 +50,7 @@ class CartScreen extends StatelessWidget {
                 ElevatedButton(
                   onPressed: cart.itemsCount <= 0
                       ? null
-                      : () {
-                          Provider.of<Orders>(context, listen: false)
-                              .addOrder(cart);
-                          cart.clear();
-                        },
+                      : () => addOrder(context),
                   child: Text('ORDER NOW'),
                 )
               ],
