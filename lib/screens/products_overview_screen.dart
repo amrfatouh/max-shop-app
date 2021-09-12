@@ -18,24 +18,21 @@ class ProductsOverviewScreen extends StatefulWidget {
 
 class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
   bool _showFavouritesOnly = false;
-  bool _isLoading = false;
   bool _fetchingProductsError = false;
   String _errorMessage = '';
+  Future<void> future;
 
   @override
   void initState() {
-    setState(() => _isLoading = true);
-    Provider.of<Products>(context, listen: false)
+    super.initState();
+    future = Provider.of<Products>(context, listen: false)
         .fetchAndSetProducts()
-        .then((_) => setState(() => _isLoading = false))
         .catchError((error) {
       setState(() {
         _fetchingProductsError = true;
         _errorMessage = error.toString();
-        _isLoading = false;
       });
     });
-    super.initState();
   }
 
   @override
@@ -84,14 +81,20 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
         ],
       ),
       drawer: AppDrawer(),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : _fetchingProductsError
-              ? Center(child: Text(_errorMessage))
-              : Padding(
-        padding: EdgeInsets.all(10),
-        child: ProductsGrid(_showFavouritesOnly),
-      ),
+      body: FutureBuilder(
+          future: future,
+          builder: (context, snapshot) {
+            // using connection state instead of hasData property as this future resolves with a void so it has no data even if it resolves successfully
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (_fetchingProductsError)
+                return Center(child: Text(_errorMessage));
+              return Padding(
+                padding: EdgeInsets.all(10),
+                child: ProductsGrid(_showFavouritesOnly),
+              );
+            }
+            return Center(child: CircularProgressIndicator());
+          }),
     );
   }
 }
