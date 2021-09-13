@@ -9,7 +9,7 @@ import '../widgets/products_grid.dart';
 enum Filter { AllProducts, Favourites }
 
 class ProductsOverviewScreen extends StatefulWidget {
-  static String routeName = '/';
+  static String routeName = '/products-overview';
   const ProductsOverviewScreen({Key key}) : super(key: key);
 
   @override
