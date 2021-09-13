@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app/providers/product.dart';
 import 'package:shop_app/providers/products.dart';
+import 'package:http/http.dart' as http;
 
 class EditProductScreen extends StatefulWidget {
   static String routeName = '/edit-product';
@@ -14,9 +15,25 @@ class EditProductScreen extends StatefulWidget {
 class _EditProductScreenState extends State<EditProductScreen> {
   final _priceFocusNode = FocusNode();
   final _imageUrlFocusNode = FocusNode();
+  final _imageUrlController = TextEditingController();
   final _form = GlobalKey<FormState>();
   Product _product;
   bool _isLoading = false;
+  String imageUrl = '';
+  bool _imageSet = false;
+
+  Future<bool> isValidUrl(String url) async {
+    // print(imageUrl.isEmpty);
+    // print(!imageUrl.contains('http://'));
+    // print(!imageUrl.contains('https://'));
+    if (imageUrl.isEmpty ||
+        (!imageUrl.contains('http://') && !imageUrl.contains('https://')))
+      return false;
+    final response = await http.get(Uri.parse(url));
+    // print(response.statusCode);
+    return response.statusCode == 200;
+  }
+
 
   @override
   void dispose() {
@@ -28,7 +45,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
   void _saveForm() async {
     setState(() => _isLoading = true);
     bool isValid = _form.currentState.validate();
-    if (!isValid) return;
+    if (!isValid) {
+      setState(() => _isLoading = false);
+      return;
+    }
     _form.currentState.save();
     try {
       await Provider.of<Products>(context, listen: false)
@@ -54,6 +74,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
   @override
   Widget build(BuildContext context) {
     _product = ModalRoute.of(context).settings.arguments;
+    if (!_imageSet) {
+      _imageUrlController.text = _product.imageUrl;
+      setState(() => imageUrl = _product.imageUrl);
+      _imageSet = true;
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text('Edit Product'),
@@ -110,18 +135,39 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   return null;
                 },
               ),
+              SizedBox(height: 10),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
-                    child: Text(
-                      'image preview',
-                      softWrap: true,
+              child: FutureBuilder(
+                            future: isValidUrl(imageUrl),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.done) {
+                                if (snapshot.data == true)
+                                  return Image.network(imageUrl);
+                                else
+                                  return Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(5),
+                                child: Text(
+                                  'can\'t preview image',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  );
+                              }
+                              return Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            },
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        width: 1,
-                        color: Colors.grey,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  width: 2,
+                              color: Colors.blue.shade200,
                       ),
                     ),
                     width: 80,
@@ -130,25 +176,35 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   SizedBox(width: 10),
                   Expanded(
                     // imageUrl
-                    child: TextFormField(
-                      decoration: InputDecoration(labelText: 'Image URL'),
-                      keyboardType: TextInputType.url,
-                      textInputAction: TextInputAction.done,
-                      focusNode: _imageUrlFocusNode,
-                      initialValue: _product.imageUrl,
-                      onFieldSubmitted: (_) {
-                        _saveForm();
-                      },
-                      onSaved: (value) {
-                        _product.imageUrl = value;
-                      },
-                      validator: (value) {
-                        if (value.isEmpty) return 'Image Url is required';
-                        if (!value.startsWith('http') &&
-                            !value.startsWith('https'))
-                          return 'Enter a valid URL';
-                        return null;
-                      },
+                    child: Focus(
+                            onFocusChange: (hasFocus) {
+                              if (!hasFocus)
+                                setState(() {
+                                  imageUrl = _imageUrlController.text;
+                                });
+                            },
+                      child: TextFormField(
+                              controller: _imageUrlController,
+                              decoration:
+                                  InputDecoration(labelText: 'Image URL'),
+                              keyboardType: TextInputType.url,
+                              textInputAction: TextInputAction.done,
+                              focusNode: _imageUrlFocusNode,
+                              onFieldSubmitted: (_) {
+                                _saveForm();
+                              },
+                              onSaved: (value) {
+                                _product.imageUrl = value;
+                              },
+                              validator: (value) {
+                                if (value.isEmpty)
+                                  return 'Image Url is required';
+                                if (!value.startsWith('http') &&
+                                    !value.startsWith('https'))
+                                  return 'Enter a valid URL';
+                                return null;
+                              },
+                      ),
                     ),
                   ),
                 ],

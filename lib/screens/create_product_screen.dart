@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app/providers/product.dart';
 import 'package:shop_app/providers/products.dart';
+import 'package:http/http.dart' as http;
 
 class CreateProductScreen extends StatefulWidget {
   static String routeName = '/create-product';
@@ -14,15 +15,25 @@ class CreateProductScreen extends StatefulWidget {
 class _CreateProductScreenState extends State<CreateProductScreen> {
   final _priceFocusNode = FocusNode();
   final _imageUrlFocusNode = FocusNode();
+  final _imageUrlController = TextEditingController();
   final _form = GlobalKey<FormState>();
   Product _product = Product();
   bool _isLoading = false;
+  String imageUrl = '';
 
   @override
   void dispose() {
     _priceFocusNode.dispose();
     _imageUrlFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<bool> isValidUrl(String url) async {
+    if (imageUrl.isEmpty ||
+        (!imageUrl.contains('http://') && !imageUrl.contains('https://')))
+      return false;
+    final response = await http.get(Uri.parse(url));
+    return response.statusCode == 200;
   }
 
   Future<void> _saveForm() async {
@@ -112,18 +123,39 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                   return null;
                 },
               ),
+              SizedBox(height: 10),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
-                    child: Text(
-                      'image preview',
-                      softWrap: true,
+              child: FutureBuilder(
+                            future: isValidUrl(imageUrl),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.done) {
+                                if (snapshot.data == true)
+                                  return Image.network(imageUrl);
+                                else
+                                  return Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(5),
+                                child: Text(
+                                  'can\'t preview image',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  );
+                              }
+                              return Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            },
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        width: 1,
-                        color: Colors.grey,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  width: 2,
+                              color: Colors.blue.shade200,
                       ),
                     ),
                     width: 80,
@@ -131,29 +163,39 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                   ),
                   SizedBox(width: 10),
                   Expanded(
-                    // imageUrl
-                    child: TextFormField(
-                      decoration: InputDecoration(labelText: 'Image URL'),
-                      keyboardType: TextInputType.url,
-                      textInputAction: TextInputAction.done,
-                      focusNode: _imageUrlFocusNode,
-                      onFieldSubmitted: (_) {
-                        _saveForm();
-                      },
-                      onSaved: (value) {
-                        _product.imageUrl = value;
-                      },
-                      validator: (value) {
-                        if (value.isEmpty) return 'Image Url is required';
-                        if (!value.startsWith('http') &&
-                            !value.startsWith('https'))
-                          return 'Enter a valid URL';
-                        return null;
-                      },
+              child: Focus(
+                            onFocusChange: (hasFocus) {
+                              if (!hasFocus)
+                                setState(() {
+                                  imageUrl = _imageUrlController.text;
+                                });
+                            },
+                            child: TextFormField(
+                  controller: _imageUrlController,
+                              decoration:
+                                  InputDecoration(labelText: 'Image URL'),
+                              keyboardType: TextInputType.url,
+                              textInputAction: TextInputAction.done,
+                              focusNode: _imageUrlFocusNode,
+                              onFieldSubmitted: (_) {
+                                _saveForm();
+                              },
+                              onSaved: (value) {
+                                _product.imageUrl = value;
+                              },
+                              validator: (value) {
+                          if (value.isEmpty)
+                                  return 'Image Url is required';
+                                if (!value.startsWith('http') &&
+                                    !value.startsWith('https'))
+                                  return 'Enter a valid URL';
+                                return null;
+                              },
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                    ),
+                      ],
+                    ),
             ],
           ),
         ),
