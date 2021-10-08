@@ -28,7 +28,11 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
     future = Provider.of<Products>(context, listen: false)
         .fetchAndSetProducts()
         .catchError((error) {
-      setState(() {
+          print('***********************************************');
+      print('***********************************************');
+      print('***********************************************');
+      print(error);
+          setState(() {
         _fetchingProductsError = true;
         _errorMessage = error.toString();
       });

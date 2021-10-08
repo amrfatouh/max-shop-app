@@ -8,23 +8,24 @@ class Product with ChangeNotifier {
   String title;
   double price;
   String imageUrl;
-  bool isFavourite = false;
+  bool isFavourite;
 
   Product({
     this.id,
     this.title,
     this.price,
     this.imageUrl,
+    this.isFavourite = false,
   });
 
-  void toggleFavourite() async {
+  void toggleFavourite(String token, String userId) async {
     isFavourite = !isFavourite;
     notifyListeners();
 
     final url = Uri.parse(
-        'https://flutter-shop-fd9a3-default-rtdb.firebaseio.com/products/$id.json');
+        'https://flutter-shop-fd9a3-default-rtdb.firebaseio.com/userFavourites/$userId/$id.json?auth=$token');
     final response =
-        await http.patch(url, body: json.encode({'isFavourite': isFavourite}));
+        await http.put(url, body: json.encode(isFavourite));
     if (response.statusCode >= 400) {
       isFavourite = !isFavourite;
       notifyListeners();

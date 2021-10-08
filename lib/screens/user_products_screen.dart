@@ -5,9 +5,20 @@ import 'package:shop_app/widgets/app_drawer.dart';
 import 'package:shop_app/providers/products.dart';
 import 'package:shop_app/widgets/user_product_item.dart';
 
-class UserProductsScreen extends StatelessWidget {
+class UserProductsScreen extends StatefulWidget {
   static String routeName = '/user-products';
   const UserProductsScreen({Key key}) : super(key: key);
+
+  @override
+  _UserProductsScreenState createState() => _UserProductsScreenState();
+}
+
+class _UserProductsScreenState extends State<UserProductsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Provider.of<Products>(context, listen: false).fetchAndSetProducts(true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +38,7 @@ class UserProductsScreen extends StatelessWidget {
       body: RefreshIndicator(
         onRefresh: () {
           return Provider.of<Products>(context, listen: false)
-              .fetchAndSetProducts();
+              .fetchAndSetProducts(true);
         },
         child: ListView.builder(
           itemCount: productsData.products.length,

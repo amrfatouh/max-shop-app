@@ -15,8 +15,8 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   bool _isSignUp = false;
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController = TextEditingController(text: 'amrfatouh@example.com');
+  final _passwordController = TextEditingController(text: '123456');
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
 
@@ -202,8 +202,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                     await Provider.of<Auth>(context,
                                             listen: false)
                                         .signin(email, password);
-                                    Navigator.of(context).pushReplacementNamed(
-                                        ProductsOverviewScreen.routeName);
+                                    // Navigator.of(context).pushReplacementNamed(
+                                    //     ProductsOverviewScreen.routeName);
                                   } catch (error) {
                                     showErrorDialogue(
                                       context,
@@ -223,8 +223,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                     await Provider.of<Auth>(context,
                                             listen: false)
                                         .signup(email, password);
-                                    Navigator.of(context).pushReplacementNamed(
-                                        ProductsOverviewScreen.routeName);
+                                    // Navigator.of(context).pushReplacementNamed(
+                                    //     ProductsOverviewScreen.routeName);
                                   } catch (error) {
                                     showErrorDialogue(
                                       context,

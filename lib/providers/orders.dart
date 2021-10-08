@@ -8,6 +8,14 @@ import 'package:shop_app/providers/order_item.dart';
 
 class Orders with ChangeNotifier {
   List<OrderItem> _orders = [];
+  String _token;
+  String _userId;
+
+  Orders(this._token, this._userId, Orders previousOrders) {
+    if (previousOrders != null) {
+      _orders = previousOrders._orders;
+    }
+  }
 
   List<OrderItem> get items {
     return [..._orders];
@@ -15,7 +23,7 @@ class Orders with ChangeNotifier {
 
   Future<void> fetchAndSetOrders() async {
     final url =
-        'https://flutter-shop-fd9a3-default-rtdb.firebaseio.com/orders.json';
+        'https://flutter-shop-fd9a3-default-rtdb.firebaseio.com/orders.json?auth=$_token&orderBy="userId"&equalTo="$_userId"';
     try {
       final response = await http.get(Uri.parse(url));
       final fetchedOrders = json.decode(response.body);
@@ -46,7 +54,7 @@ class Orders with ChangeNotifier {
 
   Future<void> addOrder(Cart cart) async {
     final url =
-        'https://flutter-shop-fd9a3-default-rtdb.firebaseio.com/orders.json';
+        'https://flutter-shop-fd9a3-default-rtdb.firebaseio.com/orders.json?auth=$_token';
     final DateTime now = DateTime.now();
     try {
       final response = await http.post(Uri.parse(url),
@@ -61,6 +69,7 @@ class Orders with ChangeNotifier {
                       'price': item.price,
                     })
                 .toList(),
+            'userId': _userId,
           }));
       final responseBody = json.decode(response.body);
       final orderId = responseBody['name'];

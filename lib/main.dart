@@ -25,20 +25,42 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (ctx) => Auth(),
         ),
-        ChangeNotifierProvider(
-          create: (ctx) => Products(),
+        ChangeNotifierProxyProvider<Auth, Products>(
+          create: (BuildContext context) => Products(null, null, null),
+          update:
+              (BuildContext context, Auth auth, Products previousProducts) =>
+                  Products(auth.token, auth.userId, previousProducts),
+        ),
+        ChangeNotifierProxyProvider<Auth, Orders>(
+          create: (context) => Orders(null, null, null),
+          update: (context, auth, previousOrders) =>
+              Orders(auth.token, auth.userId, previousOrders),
         ),
         ChangeNotifierProvider(
           create: (ctx) => Cart(),
-        ),
-        ChangeNotifierProvider(
-          create: (ctx) => Orders(),
         )
       ],
       child: MaterialApp(
-        home: Provider.of<Auth>(context).isSignedIn
-            ? ProductsOverviewScreen()
-            : AuthScreen(),
+        // we use a Consumer instead of Provider.of() because MaterialApp is not a descendant of the Provider (descendants of MaterialApp are descendants of Provider)
+        home: Consumer<Auth>(
+          builder: (_, auth, __) {
+            return auth.isSignedIn
+                ? ProductsOverviewScreen()
+                : FutureBuilder(
+                    future: auth.tryAutoLogin(),
+                    builder: (context, snapshot) {
+                      // print('snapshot: ${snapshot.data}');
+                      // print(snapshot.connectionState);
+                      if (snapshot.connectionState == ConnectionState.waiting)
+                        return Center(child: CircularProgressIndicator());
+                      if (snapshot.data == true)
+                        return ProductsOverviewScreen();
+                      else
+                        return AuthScreen();
+                    },
+                  );
+          },
+        ),
         routes: {
           ProductsOverviewScreen.routeName: (ctx) => ProductsOverviewScreen(),
           ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
